@@ -1,7 +1,7 @@
 const CELL_SIZE = 20;
 // Soal no 1: Set canvas size menjadi 600
 const CANVAS_SIZE = 600;
-const REDRAW_INTERVAL = 50;
+const REDRAW_INTERVAL = 10;
 const WIDTH = CANVAS_SIZE / CELL_SIZE;
 const HEIGHT = CANVAS_SIZE / CELL_SIZE;
 const DIRECTION = {
@@ -10,8 +10,8 @@ const DIRECTION = {
     UP: 2,
     DOWN: 3,
 }
-// Soal no 2: Pengaturan Speed (semakin kecil semakin cepat) ubah dari 150 ke 120
-const MOVE_INTERVAL = 120;
+
+let MOVE_INTERVAL = 150;
 
 function initPosition() {
     return {
@@ -39,6 +39,8 @@ function initSnake(color) {
         ...initHeadAndBody(),
         direction: initDirection(),
         score: 0,
+        nyawa: 3, 
+        level: 1
     }
 }
 let snake = initSnake("blue");
@@ -60,6 +62,37 @@ let nyawa = {
 function drawCell(ctx, x, y, color) {
     ctx.fillStyle = color;
     ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+}
+
+// level board
+function drawLevel(snake) {
+    let levelCanvas;
+    levelCanvas = document.getElementById("levelBoard");
+    let levelCtx = levelCanvas.getContext("2d");
+
+    levelCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    levelCtx.font = "30px Arial";
+    levelCtx.fillText("Level " + snake.level, 10, levelCanvas.scrollHeight / 2);
+}
+
+// nyawa board
+function drawNyawa(snake) {
+    let NyawaCanvas;
+    NyawaCanvas = document.getElementById("nyawaBoard");
+    let NyawaCtx = NyawaCanvas.getContext("2d");
+    let nyawaX = 10;
+    let nyawaY = 5;
+    let cell = 15;
+    NyawaCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    for(let i = 1; i <= snake.nyawa; i++){
+        var img = document.getElementById("nyawa");
+        if(i%11==0){
+            nyawaY+=25;
+            nyawaX = 10
+        }
+        NyawaCtx.drawImage(img, nyawaX, nyawaY, cell, cell);
+        nyawaX+=20;
+    }
 }
 
 // ScoreBoard
@@ -88,7 +121,6 @@ function draw() {
 
         for (let i = 0; i < apples.length; i++) {
             let apple = apples[i];
-            // Soal no 3: DrawImage apple dan gunakan image id:
             var img = document.getElementById("apple");
             ctx.drawImage(img, apple.position.x * CELL_SIZE, apple.position.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
         }
@@ -98,14 +130,15 @@ function draw() {
             if(snake.score%k==0){
                 prima++;
             }
-            console.log("prima = " + prima)
         }
         if(prima == 2){
             var img = document.getElementById("nyawa");
             ctx.drawImage(img, nyawa.position.x * CELL_SIZE, nyawa.position.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);    
         }
 
+        drawLevel(snake);
         drawScore(snake);
+        drawNyawa(snake);
         
     }, REDRAW_INTERVAL);
 }
@@ -125,7 +158,6 @@ function teleport(snake) {
     }
 }
 
-// Soal no 4: Jadikan apples array
 function eat(snake, apples) {
     for (let i = 0; i < apples.length; i++) {
         let apple = apples[i];
@@ -133,13 +165,19 @@ function eat(snake, apples) {
             apple.position = initPosition();
             snake.score++;
             snake.body.push({x: snake.head.x, y: snake.head.y});
+            if(snake.score%5==0){
+                snake.level++;
+                MOVE_INTERVAL-=35;
+            }
         }
     }
 }
+
 function dapatNyawa(snake, nyawa) {
     if (snake.head.x == nyawa.position.x && snake.head.y == nyawa.position.y) {
         nyawa.position = initPosition();
         snake.score++;
+        snake.nyawa++;
         snake.body.push({x: snake.head.x, y: snake.head.y});
     }
 }
@@ -175,24 +213,22 @@ function moveUp(snake) {
 
 function checkCollision(snakes) {
     let isCollide = false;
-    //this
-    for (let i = 0; i < snakes.length; i++) {
-        for (let j = 0; j < snakes.length; j++) {
-            for (let k = 1; k < snakes[j].body.length; k++) {
-                if (snakes[i].head.x == snakes[j].body[k].x && snakes[i].head.y == snakes[j].body[k].y) {
-                    isCollide = true;
-                }
+    for (let j = 0; j < snakes.length; j++) {
+        for (let k = 1; k < snakes[j].body.length; k++) {
+            if (snakes[j].head.x == snakes[j].body[k].x && snakes[j].head.y == snakes[j].body[k].y) {
+                isCollide = true;
             }
         }
     }
     if (isCollide) {
-        // Soal no 5: Add game over audio:
-        var audio = new Audio('game-over.mp3');
+        var audio = new Audio('/assets/game-over.mp3');
         audio.play();
 
         alert("Game over");
-        snake1 = initSnake("purple");
         snake = initSnake("blue");
+        snake.nyawa--;
+        snake.level = 1
+        MOVE_INTERVAL = 150
     }
     return isCollide;
 }
@@ -213,7 +249,6 @@ function move(snake) {
             break;
     }
     moveBody(snake);
-    // Soal no 6: Check collision dengan snake3
     if (!checkCollision([snake])) {
         setTimeout(function() {
             move(snake);
@@ -242,15 +277,6 @@ function turn(snake, direction) {
 }
 
 document.addEventListener("keydown", function (event) {
-    // if (event.key === "ArrowLeft") {
-    //     turn(snake1, DIRECTION.LEFT);
-    // } else if (event.key === "ArrowRight") {
-    //     turn(snake1, DIRECTION.RIGHT);
-    // } else if (event.key === "ArrowUp") {
-    //     turn(snake1, DIRECTION.UP);
-    // } else if (event.key === "ArrowDown") {
-    //     turn(snake1, DIRECTION.DOWN);
-    // }
 
     if (event.key === "a") {
         turn(snake, DIRECTION.LEFT);
@@ -262,22 +288,10 @@ document.addEventListener("keydown", function (event) {
         turn(snake, DIRECTION.DOWN);
     }
 
-    // Soal no 6: Add navigation snake3:
-    // if (event.key === "j") {
-    //     turn(snake3, DIRECTION.LEFT);
-    // } else if (event.key === "l") {
-    //     turn(snake3, DIRECTION.RIGHT);
-    // } else if (event.key === "i") {
-    //     turn(snake3, DIRECTION.UP);
-    // } else if (event.key === "k") {
-    //     turn(snake3, DIRECTION.DOWN);
-    // }
 })
 
 function initGame() {
-    // move(snake1);
     move(snake);
-    // move(snake3);
 }
 
 initGame();
