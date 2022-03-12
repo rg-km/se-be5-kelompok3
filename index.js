@@ -173,8 +173,8 @@ function teleport(snake) {
 
 function eat(snake, apples) {
     for (let i = 0; i < apples.length; i++) {
-        var audio = new Audio('/assets/eat.wav');
-        var audiolevel = new Audio('/assets/level.mp3');
+        var audio = new Audio('assets/eat.wav');
+        var audiolevel = new Audio('assets/level.mp3');
         let apple = apples[i];
         if (snake.head.x == apple.position.x && snake.head.y == apple.position.y) {
             audio.play();
@@ -192,7 +192,7 @@ function eat(snake, apples) {
 }
 
 function dapatNyawa(snake, nyawa) {
-    var audio = new Audio('/assets/nyawa.wav');
+    var audio = new Audio('assets/nyawa.wav');
     if (snake.head.x == nyawa.position.x && snake.head.y == nyawa.position.y) {
         audio.play();
         nyawa.position = initPosition();
@@ -241,8 +241,8 @@ function checkCollision(snakes) {
         }
     }
     if (isCollide) {
-        var audio = new Audio('/assets/game-over.mp3');
-        var audioDefeat = new Audio('/assets/defeat.mp3');
+        var audio = new Audio('assets/game-over.mp3');
+        var audioDefeat = new Audio('assets/defeat.mp3');
         snake.nyawa--;
         if(snake.nyawa!=0){
             audio.play();
