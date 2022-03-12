@@ -12,6 +12,7 @@ const DIRECTION = {
 }
 
 let MOVE_INTERVAL = 150;
+let nyawasnake = 3;
 
 function initPosition() {
     return {
@@ -39,7 +40,8 @@ function initSnake(color) {
         ...initHeadAndBody(),
         direction: initDirection(),
         score: 0,
-        nyawa: 3, 
+        nyawa: 3,
+        // menambahkan level snake
         level: 1
     }
 }
@@ -102,9 +104,16 @@ function drawScore(snake) {
     let scoreCtx = scoreCanvas.getContext("2d");
 
     scoreCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-    scoreCtx.font = "30px Arial";
+    scoreCtx.font = "20px Arial";
+    scoreCtx.fillText("Score", 25, 20);
+    scoreCtx.font = "25px Arial";
     scoreCtx.fillStyle = snake.color
-    scoreCtx.fillText(snake.score, 10, scoreCanvas.scrollHeight / 2);
+    scoreCtx.fillText(snake.score, 40, scoreCanvas.scrollHeight / 2);
+    scoreCtx.font = "15px Arial";
+    scoreCtx.fillText("Kecepatan", 15, 65);
+    scoreCtx.font = "20px Arial";
+    scoreCtx.fillStyle = snake.color
+    scoreCtx.fillText(MOVE_INTERVAL + "ms", 20, 90);
 }
 
 function draw() {
@@ -118,6 +127,10 @@ function draw() {
         for (let i = 1; i < snake.body.length; i++) {
             drawCell(ctx, snake.body[i].x, snake.body[i].y, snake.color);
         }
+
+        // for (let i = 1; i < 10; i++) {
+        //     drawCell(ctx, i, i, snake.color);
+        // }
 
         for (let i = 0; i < apples.length; i++) {
             let apple = apples[i];
@@ -160,21 +173,28 @@ function teleport(snake) {
 
 function eat(snake, apples) {
     for (let i = 0; i < apples.length; i++) {
+        var audio = new Audio('/assets/eat.wav');
+        var audiolevel = new Audio('/assets/level.mp3');
         let apple = apples[i];
         if (snake.head.x == apple.position.x && snake.head.y == apple.position.y) {
+            audio.play();
             apple.position = initPosition();
             snake.score++;
             snake.body.push({x: snake.head.x, y: snake.head.y});
-            if(snake.score%5==0){
+
+            if(snake.score%5==0 && snake.level < 5){
+                audiolevel.play();
                 snake.level++;
-                MOVE_INTERVAL-=35;
+                MOVE_INTERVAL-=40;
             }
         }
     }
 }
 
 function dapatNyawa(snake, nyawa) {
+    var audio = new Audio('/assets/nyawa.wav');
     if (snake.head.x == nyawa.position.x && snake.head.y == nyawa.position.y) {
+        audio.play();
         nyawa.position = initPosition();
         snake.score++;
         snake.nyawa++;
@@ -222,13 +242,19 @@ function checkCollision(snakes) {
     }
     if (isCollide) {
         var audio = new Audio('/assets/game-over.mp3');
-        audio.play();
-
-        alert("Game over");
-        snake = initSnake("blue");
+        var audioDefeat = new Audio('/assets/defeat.mp3');
         snake.nyawa--;
-        snake.level = 1
-        MOVE_INTERVAL = 150
+        if(snake.nyawa!=0){
+            audio.play();
+            alert("Upss.... kamu masih memiliki " + snake.nyawa + " kesempatan");
+        }
+
+        if(snake.nyawa == 0){
+            audioDefeat.play();
+            alert("HUUU... KAMU KALAH... Mulai Dari Awal");
+            snake = initSnake("blue");
+            MOVE_INTERVAL = 150
+        }
     }
     return isCollide;
 }
