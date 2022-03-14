@@ -11,6 +11,13 @@ const DIRECTION = {
     DOWN: 3,
 }
 
+var audioEat = new Audio('assets/eat.wav');
+var audioLevelUp = new Audio('assets/level.mp3');
+var audioGameOver = new Audio('assets/game-over.mp3');
+var audioDefeat = new Audio('assets/defeat.mp3');
+var audioNyawa = new Audio('assets/nyawa.wav');
+
+
 let MOVE_INTERVAL = 150;
 let nyawasnake = 3;
 
@@ -60,6 +67,102 @@ let apples = [{
 let nyawa = {
     position: initPosition()
 }
+
+var wallX = [];
+var wallY = [];
+var levelWall2 = [
+  {
+    x1: 2,
+    x2: 15,
+    y: 5,
+  },
+];
+var levelWall3 = [
+  {
+    x: 4,
+    y1: 15,
+    y2: 30,
+  },
+];
+var levelWall4 = [
+  {
+    x1: 8,
+    x2: 22,
+    y: 20,
+  },
+];
+var levelWall5 = [
+  {
+    x1: 0,
+    x2: 30,
+    y: 0,
+  }, 
+  {
+    x1: 0,
+    x2: 30,
+    y: 29,
+  }, 
+  {
+    y1: 0,
+    y2: 30,
+    x: 0,
+  },
+  {
+    y1: 0,
+    y2: 30,
+    x: 29,
+  }
+];
+
+function initWall2() {
+    for (let i = 0; i < levelWall2.length; i++) {
+      for (let j = levelWall2[i].x1; j <= levelWall2[i].x2; j++) {
+        wallX.push(j);
+        wallY.push(levelWall2[i].y);
+      }
+    }
+  }
+  
+  function initWall3() {
+    for (let i = 0; i < levelWall3.length; i++) {
+      for (let j = levelWall3[i].y1; j <= levelWall3[i].y2; j++) {
+        wallY.push(j);
+        wallX.push(levelWall3[i].x);    
+      }
+    }
+  }
+  
+  function initWall4() {
+    for (let i = 0; i < levelWall4.length; i++) {
+      for (let j = levelWall4[i].x1; j <= levelWall4[i].x2; j++) {
+        wallX.push(j);
+        wallY.push(levelWall4[i].y);
+      }
+    }
+  }
+  
+  function initWall5() {
+    for (let i = 0; i < levelWall5.length; i++) {
+      for (let j = levelWall5[i].x1; j <= levelWall5[i].x2; j++) {
+        wallX.push(j);
+        wallY.push(levelWall5[i].y);
+      }
+    }
+    for (let i = 0; i < levelWall5.length; i++) {
+      for (let j = levelWall5[i].y1; j <= levelWall5[i].y2; j++) {
+        wallY.push(j);
+        wallX.push(levelWall5[i].x);
+      }
+    }
+  }
+
+  function createWall() {
+    let wallCanvas = document.getElementById("snakeBoard");
+    let ctx = wallCanvas.getContext("2d");
+    for (let i = 0; i < wallX.length; i++) {
+      drawWall(ctx, wallX[i], wallY[i], "#808080");
+    }
+  }
 
 function drawCell(ctx, x, y, color) {
     ctx.fillStyle = color;
@@ -116,21 +219,26 @@ function drawScore(snake) {
     scoreCtx.fillText(MOVE_INTERVAL + "ms", 20, 90);
 }
 
+function drawWall(ctx, x, y, color){
+    ctx.fillStyle = color;
+  ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+}
+
 function draw() {
     setInterval(function() {
         let snakeCanvas = document.getElementById("snakeBoard");
         let ctx = snakeCanvas.getContext("2d");
 
         ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-      
-        drawCell(ctx, snake.head.x, snake.head.y, snake.color);
-        for (let i = 1; i < snake.body.length; i++) {
-            drawCell(ctx, snake.body[i].x, snake.body[i].y, snake.color);
-        }
+        var snakeHeadImg = document.getElementById("snakeHead");
+        var snakeBodyImg = document.getElementById("snakeBody");
 
-        // for (let i = 1; i < 10; i++) {
-        //     drawCell(ctx, i, i, snake.color);
-        // }
+        ctx.drawImage(snakeHeadImg, snake.head.x * CELL_SIZE, snake.head.y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+
+        for (let i = 1; i < snake.body.length; i++) {
+            ctx.drawImage(snakeBodyImg, snake.body[i].x * CELL_SIZE, snake.body[i].y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+
+        }
 
         for (let i = 0; i < apples.length; i++) {
             let apple = apples[i];
@@ -149,6 +257,7 @@ function draw() {
             ctx.drawImage(img, nyawa.position.x * CELL_SIZE, nyawa.position.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);    
         }
 
+        createWall();
         drawLevel(snake);
         drawScore(snake);
         drawNyawa(snake);
@@ -173,32 +282,57 @@ function teleport(snake) {
 
 function eat(snake, apples) {
     for (let i = 0; i < apples.length; i++) {
-        var audio = new Audio('assets/eat.wav');
-        var audiolevel = new Audio('assets/level.mp3');
+
         let apple = apples[i];
         if (snake.head.x == apple.position.x && snake.head.y == apple.position.y) {
-            audio.play();
+            audioEat.play();
             apple.position = initPosition();
+            if(apple.position.x == wallX && apple.position.y == wallY){
+                apple.position = initPosition();
+            }
             snake.score++;
             snake.body.push({x: snake.head.x, y: snake.head.y});
 
-            if(snake.score%5==0 && snake.level < 5){
-                audiolevel.play();
+            if(snake.score%5==0 && snake.level <= 5){
+                audioLevelUp.play();
                 snake.level++;
-                MOVE_INTERVAL-=40;
+                MOVE_INTERVAL-=30;
+                if (snake.level == 2) {
+                    initWall2();
+                  } else if (snake.level == 3) {
+                    initWall3();
+                  } else if (snake.level == 4) {
+                    initWall4();
+                  } else if (snake.level == 5) {
+                      wallX = [];
+                      wallY = [];
+                    initWall5();
+                  }
+                // nextLevel();
             }
         }
     }
 }
 
 function dapatNyawa(snake, nyawa) {
-    var audio = new Audio('assets/nyawa.wav');
+
     if (snake.head.x == nyawa.position.x && snake.head.y == nyawa.position.y) {
-        audio.play();
+        audioNyawa.play();
         nyawa.position = initPosition();
         snake.score++;
         snake.nyawa++;
         snake.body.push({x: snake.head.x, y: snake.head.y});
+        if (snake.level == 2) {
+            initWall2();
+          } else if (snake.level == 3) {
+            initWall3();
+          } else if (snake.level == 4) {
+            initWall4();
+          } else if (snake.level == 5) {
+            initWall5();
+            wallX = [];
+            wallY = [];
+          }
     }
 }
 
@@ -240,12 +374,39 @@ function checkCollision(snakes) {
             }
         }
     }
+
+    for (let i = 0; i < wallX.length; i++) {
+        if (
+        snake.head.x === wallX[i] &&
+          (snake.direction == 2 || snake.direction == 3)
+        ) {
+          if (
+          snake.head.y - 1 === wallY[i] ||
+          snake.head.y + 1 === wallY[i]
+          ) {
+            isCollide = true;
+            snake.direction = (Math.random() < 5) ? 0 : 1;
+        }
+    }
+    
+    if (
+        snake.head.y === wallY[i] &&
+        (snake.direction == 0 || snake.direction == 1)
+        ) {
+            if (
+                snake.head.x - 1 === wallX[i] ||
+                snake.head.x + 1 === wallX[i]
+                ) {
+                    isCollide = true;
+                    snake.direction = (Math.random() < 5) ? 2 : 3;
+          }
+        }
+      }
     if (isCollide) {
-        var audio = new Audio('assets/game-over.mp3');
-        var audioDefeat = new Audio('assets/defeat.mp3');
+
         snake.nyawa--;
         if(snake.nyawa!=0){
-            audio.play();
+            audioGameOver.play();
             alert("Upss.... kamu masih memiliki " + snake.nyawa + " kesempatan");
         }
 
@@ -253,7 +414,10 @@ function checkCollision(snakes) {
             audioDefeat.play();
             alert("HUUU... KAMU KALAH... Mulai Dari Awal");
             snake = initSnake("blue");
-            MOVE_INTERVAL = 150
+            wallX = [];
+            wallY = [];
+            MOVE_INTERVAL = 150;
+
         }
     }
     return isCollide;
